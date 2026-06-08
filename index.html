@@ -279,7 +279,8 @@ function compute(){
   const F = engineer(p);
   let score = 0;
   for(const feat of MODEL.features){
-    const val = F[feat]!==undefined?F[feat]:0;
+    let val = F[feat];
+    if(val===undefined||isNaN(val)) val = 0;
     const med = MODEL.feature_medians[feat]||0;
     const coef = MODEL.coefficients[feat]||0;
     score += coef * (val - med);
