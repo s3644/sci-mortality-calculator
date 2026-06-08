@@ -103,6 +103,63 @@ body{font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif
   <div id="recBox"></div>
 </div>
 
+<div class="card">
+  <details>
+    <summary style="cursor:pointer;font-weight:600;font-size:1.05em;color:#16213e;padding:4px 0">📖 Field Reference Guide — How to Fill Each Parameter</summary>
+    <div style="margin-top:12px;font-size:.85em;color:#555;line-height:1.6">
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px">
+<div><strong style="color:#1a1a2e">Demographics &amp; Injury</strong>
+<p><b>Age</b> — Patient age at injury (years). Integer, 0–120.</p>
+<p><b>Sex</b> — Biological sex at birth. <i>male</i> or <i>female</i>.</p>
+<p><b>Height / Weight</b> — Best available measurement in cm / kg. Used to compute BMI. Enter N/A if not measured.</p>
+<p><b>AIS Grade</b> — ASIA Impairment Scale. <b>A</b>=Complete (no motor/sensory below level), <b>B</b>=Sensory incomplete, <b>C</b>=Motor incomplete (&lt;½ key muscles &lt;3), <b>D</b>=Motor incomplete (≥½ key muscles ≥3), <b>E</b>=Normal.</p>
+<p><b>Neurological Level</b> — Most caudal segment with normal function. <b>C</b>=Cervical, <b>T</b>=Thoracic, <b>L</b>=Lumbar, <b>S</b>=Sacral.</p>
+</div>
+
+<div><strong style="color:#1a1a2e">Injury Characteristics</strong>
+<p><b>Vertebral Injury</b> — Fracture or dislocation of vertebra? Yes/No/N/A.</p>
+<p><b>Spine Surgery</b> — Surgical stabilization or decompression performed? Yes/No/N/A.</p>
+<p><b>Associated Injury</b> — Traumatic brain injury, major fractures, or organ injuries? Yes/No/N/A.</p>
+<p><b>Injury Year</b> — Calendar year injury occurred (1970–2026).</p>
+<p><b>Etiology</b> — Cause of injury: <i>vehicular</i> (MVC, auto, motorcycle), <i>fall</i>, <i>violence</i> (gunshot, stabbing, assault), <i>sports</i> (diving, football, rugby), <i>other</i>.</p>
+<p><b>Injury→Admission</b> — Days from injury to first admission at SCI center (0–365).</p>
+</div>
+
+<div><strong style="color:#1a1a2e">Comorbidities</strong>
+<p><b>Diabetes</b> — Diagnosed diabetes mellitus (type 1 or 2). <i>Yes/No/N/A.</i></p>
+<p><b>Hypertension</b> — Diagnosed hypertension requiring treatment. <i>Yes/No/N/A.</i></p>
+<p><b>Hyperlipidemia</b> — Diagnosed dyslipidemia or on lipid-lowering therapy. <i>Yes/No/N/A.</i></p>
+<p><b>Arthritis</b> — Diagnosed osteoarthritis or inflammatory arthritis. <i>Yes/No/N/A.</i></p>
+<p><b>Heart Disease</b> — Coronary artery disease, heart failure, or arrhythmia. <i>Yes/No/N/A.</i></p>
+<p><b>Depression / Anxiety</b> — Clinically diagnosed or treated. <i>Yes/No/N/A.</i></p>
+<p><b>Nursing Home</b> — Patient resided in nursing home or skilled facility before injury. <i>Yes/No/N/A.</i></p>
+<p style="color:#888;font-style:italic">💡 Use N/A if comorbidity status is unknown — the model accounts for unassessed conditions.</p>
+</div>
+
+<div><strong style="color:#1a1a2e">Functional &amp; Hospital Data</strong>
+<p><b>FIM Motor</b> — Functional Independence Measure motor subscore (13–91). Measures self-care, sphincter control, transfers, and locomotion at rehabilitation admission. <i>Defaults to N/A (most patients).</i></p>
+<p><b>Sphincter</b> — Bladder sphincter control (1–4 scale). 1=complete control, 4=no control. <i>NSCISC variable AVoSphAd.</i></p>
+<p><b>Anal Sensation</b> — Anal sensation present (1–4 scale). 1=normal, 4=absent. <i>NSCISC variable AAnSnAdm.</i></p>
+<p><b>Walking at Rehab</b> — Able to walk at rehabilitation discharge? <i>Yes/No/N/A.</i></p>
+<p><b>Rehab Stay</b> — Total days in rehabilitation program (1–730 days).</p>
+<p><b>Acute Stay</b> — Days in acute care hospital after injury (0–999 days).</p>
+<p><b>Rehab Hospital Stay</b> — Days in rehabilitation hospital unit (0–999 days). Distinct from total rehab stay.</p>
+<p style="color:#888;font-style:italic">💡 Sphincter, Anal Sensation, and FIM are from NSCISC Form I admission/rehab assessment. Enter N/A if assessment not yet completed.</p>
+</div>
+</div>
+
+<div style="margin-top:14px;padding:10px 12px;background:#e3f2fd;border-radius:6px;font-size:.8em">
+  <strong>⚕️ Clinical Note:</strong> This model was trained on NSCISC 2021 data (35,631 patients, 34% mortality).
+  Predictions are calibrated Cox proportional hazards risk scores (C-index 0.82).
+  The model uses 85 engineered features including non-linear transforms and interaction terms.
+  <b>Not for clinical decision-making without prospective validation.</b>
+</div>
+
+    </div>
+  </details>
+</div>
+
 </div>
 
 <div class="footer">
