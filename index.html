@@ -118,8 +118,8 @@ let MODEL = null;
 const FIELDS = [
   {k:'age',l:'Age',t:'number',d:'35',min:0,max:120},
   {k:'sex',l:'Sex',t:'select',d:'male',o:['male','female']},
-  {k:'height_inches',l:'Height (in)',t:'number',d:'68',min:36,max:96,na:1},
-  {k:'weight_lbs',l:'Weight (lbs)',t:'number',d:'160',min:50,max:600,na:1},
+  {k:'height_cm',l:'Height (cm)',t:'number',d:'173',min:100,max:250,na:1},
+  {k:'weight_kg',l:'Weight (kg)',t:'number',d:'73',min:30,max:300,na:1},
   {k:'ais',l:'AIS Grade',t:'select',d:'A',o:['A','B','C','D','E']},
   {k:'neuro_level',l:'Neuro Level',t:'select',d:'C',o:['C','T','L','S']},
   {k:'vertebral_injury',l:'Vert Injury',t:'select',d:'1',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
@@ -173,9 +173,9 @@ function engineer(p){
   F.age = parseFloat(p.age)||35;
   F.sex_male = String(p.sex||'').toLowerCase().startsWith('m')?1:0;
 
-  const ht = na(p.height_inches)?NaN:parseFloat(p.height_inches);
-  const wt = na(p.weight_lbs)?NaN:parseFloat(p.weight_lbs);
-  F.bmi = (!isNaN(ht)&&!isNaN(wt)&&ht>0&&ht<999&&wt>0&&wt<999)?(wt/(ht*ht))*703:NaN;
+  const ht = na(p.height_cm)?NaN:parseFloat(p.height_cm);
+  const wt = na(p.weight_kg)?NaN:parseFloat(p.weight_kg);
+  F.bmi = (!isNaN(ht)&&!isNaN(wt)&&ht>0&&wt>0)?wt/((ht/100)*(ht/100)):NaN;
   F.bmi_miss = isNaN(F.bmi)?1:0;
 
   const ais = {'A':5,'B':4,'C':3,'D':2,'E':1};
