@@ -3,18 +3,8 @@
 **Cox Proportional Hazards model for SCI mortality risk prediction**
 NSCISC 2021 · 35,631 patients · C-index 0.82 · 85 features
 
-## Live Demo
+deployment: `https://s3644.github.io/sci-mortality-calculator/`
 
-After deployment: `https://<username>.github.io/sci-mortality-calculator/`
-
-## Deploy to GitHub Pages
-
-1. **Create a new GitHub repo** named `sci-mortality-calculator`
-2. **Upload these 2 files** to the repo root:
-   - `index.html`
-   - `cox_model.json`
-3. **Enable GitHub Pages:** Settings → Pages → Source: `main` branch, root folder → Save
-4. Your calculator is live at `https://<username>.github.io/sci-mortality-calculator/`
 
 ## How It Works
 
