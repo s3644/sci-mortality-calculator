@@ -127,7 +127,7 @@ const FIELDS = [
   {k:'associated_injury',l:'Assoc Injury',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
   {k:'injury_year',l:'Injury Year',t:'number',d:'2021',min:1970,max:2026},
   {k:'etiology',l:'Etiology',t:'select',d:'vehicular',o:['vehicular','fall','violence','sports','other']},
-  {k:'days_injury_to_admit',l:'Days to Admit',t:'number',d:'2',min:0,max:365,na:1},
+  {k:'days_injury_to_admit',l:'Injury→Admission',t:'number',d:'2',min:0,max:365,na:1,unit:'days',note:'days'},
   {k:'diabetes',l:'Diabetes',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
   {k:'hypertension',l:'Hypertension',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
   {k:'hyperlipidemia',l:'Hyperlipidemia',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
@@ -140,9 +140,9 @@ const FIELDS = [
   {k:'sphincter',l:'Sphincter (1-4)',t:'number',d:'3',min:1,max:4,na:1},
   {k:'anal_sensation',l:'Anal Sensation (1-4)',t:'number',d:'2',min:1,max:4,na:1},
   {k:'walking_at_rehab',l:'Walking at Rehab',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'rehab_duration',l:'Rehab Days',t:'number',d:'90',min:1,max:730,na:1},
-  {k:'acute_hosp_days',l:'Acute Days',t:'number',d:'30',min:0,max:999,na:1},
-  {k:'rehab_hosp_days',l:'Rehab Hosp Days',t:'number',d:'60',min:0,max:999,na:1},
+  {k:'rehab_duration',l:'Rehab Stay',t:'number',d:'90',min:1,max:730,na:1,unit:'days',note:'≈ 3 months'},
+  {k:'acute_hosp_days',l:'Acute Stay',t:'number',d:'30',min:0,max:999,na:1,unit:'days',note:'≈ 4 weeks'},
+  {k:'rehab_hosp_days',l:'Rehab Hospital Stay',t:'number',d:'60',min:0,max:999,na:1,unit:'days',note:'≈ 2 months'},
 ];
 
 // ═══ LOAD MODEL ═══
@@ -338,10 +338,11 @@ function buildForm(){
       }).join('');
       inp = `<select id="inp_${f.k}">${opts}</select>`;
     }else{
-      inp = `<input type="${f.t}" id="inp_${f.k}" value="${f.d}" min="${f.min||''}" max="${f.max||''}">`;
+      inp = `<input type="${f.t}" id="inp_${f.k}" value="${f.d}" min="${f.min||''}" max="${f.max||''}" oninput="updateNote('${f.k}')">`;
     }
+    const noteHtml = f.note?`<div class="na-row" style="color:#1976d2" id="note_${f.k}">${f.note}</div>`:'';
     const naHtml = f.na?`<div class="na-row"><label><input type="checkbox" id="na_${f.k}" onchange="togNA('${f.k}')" ${f.naDefault?'checked':''}> N/A</label></div>`:'';
-    return `<div class="field"><label>${f.l}</label>${inp}${naHtml}</div>`;
+    return `<div class="field"><label>${f.l}${f.unit?' <span style="font-weight:400;font-size:.75em;color:#999">('+f.unit+')</span>':''}</label>${inp}${noteHtml}${naHtml}</div>`;
   }).join('');
   // Apply naDefault to inputs
   for(const f of FIELDS){
@@ -352,10 +353,26 @@ function buildForm(){
   }
 }
 
+function updateNote(k){
+  const f = FIELDS.find(x=>x.k===k);
+  if(!f||!f.note) return;
+  const el = document.getElementById('note_'+k);
+  if(!el) return;
+  const v = parseFloat(document.getElementById('inp_'+k).value);
+  if(isNaN(v)){el.textContent=f.note;return;}
+  // Dynamic note based on value
+  if(k==='rehab_duration'||k==='rehab_hosp_days')
+    el.textContent = `${v} days ≈ ${(v/7).toFixed(1)} weeks ≈ ${(v/30).toFixed(1)} months`;
+  else if(k==='acute_hosp_days')
+    el.textContent = `${v} days ≈ ${(v/7).toFixed(1)} weeks`;
+  else el.textContent = f.note;
+}
+
 function togNA(k){
   const cb=document.getElementById('na_'+k),inp=document.getElementById('inp_'+k);
   if(cb.checked){inp.classList.add('na');inp.value='N/A';inp.disabled=true;}
   else{inp.classList.remove('na');inp.disabled=false;inp.value=FIELDS.find(f=>f.k===k).d;}
+  if(FIELDS.find(f=>f.k===k)?.note) updateNote(k);
 }
 
 function clearAll(){
