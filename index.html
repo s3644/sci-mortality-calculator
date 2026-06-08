@@ -329,7 +329,12 @@ function buildForm(){
   g.innerHTML = FIELDS.map(f=>{
     let inp;
     if(f.t==='select'){
-      const opts = (f.o||[]).map(o=>typeof o==='string'?`<option value="${o}">${o}</option>`:`<option value="${o.v}">${o.l}</option>`).join('');
+      const opts = (f.o||[]).map(o=>{
+        const v = typeof o==='string'?o:o.v;
+        const l = typeof o==='string'?o:o.l;
+        const sel = v==f.d?' selected':'';
+        return `<option value="${v}"${sel}>${l}</option>`;
+      }).join('');
       inp = `<select id="inp_${f.k}">${opts}</select>`;
     }else{
       inp = `<input type="${f.t}" id="inp_${f.k}" value="${f.d}" min="${f.min||''}" max="${f.max||''}">`;
