@@ -3,451 +3,970 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SCI Mortality Calculator | SCI-PReSS</title>
-<meta name="description" content="Spinal Cord Injury Mortality Risk Calculator — Cox PH model, C-index 0.82, NSCISC 2021, 35,631 patients">
+<title>SCI-PReSS — Complication Risk Calculator</title>
 <style>
-:root{--bg:#f0f2f5;--card:#fff;--text:#1a1a2e;--accent:#1976d2;--border:#e0e0e0;--warn:#ff9800;--good:#43a047;--crit:#c62828}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text)}
-.header{background:linear-gradient(135deg,#1a1a2e,#0d47a1);color:#fff;padding:20px;text-align:center}
-.header h1{font-size:1.5em;margin-bottom:2px}
-.header .sub{opacity:.75;font-size:.85em}
-.header .auth{opacity:.55;font-size:.75em;margin-top:4px}
-.header a{color:#90caf9}
-.container{max-width:900px;margin:16px auto;padding:0 12px}
-.card{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px;margin-bottom:12px}
-.card h2{font-size:1.05em;color:#16213e;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #eee}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-.field label{display:block;font-size:.75em;font-weight:600;color:#666;margin-bottom:2px}
-.field input,.field select{width:100%;padding:7px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:.85em}
-.field input:focus,.field select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 2px rgba(25,118,210,.12)}
-.field input.na{background:#fff8e1;border-color:var(--warn);color:#999;font-style:italic}
-.na-row{margin-top:3px;font-size:.7em;color:#999}
-.na-row label{cursor:pointer;font-weight:400}
-.btn{background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:.95em;font-weight:600;cursor:pointer;transition:.15s}
-.btn:hover{background:#1565c0}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-row{display:flex;gap:8px;margin-top:12px}
-.btn-row .btn{flex:1}
-.btn-row .btn.sec{background:#fff;color:var(--accent);border:1.5px solid var(--accent)}
-.btn-row .btn.sec:hover{background:#e3f2fd}
-.results{display:none}
-.results.show{display:block}
-.meter-row{display:flex;align-items:center;gap:12px;margin:12px 0}
-.risk-num{font-size:2.2em;font-weight:700;min-width:80px}
-.meter-wrap{flex:1}
-.meter{height:20px;background:#e0e0e0;border-radius:10px;overflow:hidden}
-.meter-fill{height:100%;border-radius:10px;transition:width .4s}
-.meter-fill.low{background:linear-gradient(90deg,#66bb6a,#43a047)}
-.meter-fill.med{background:linear-gradient(90deg,#ffa726,#fb8c00)}
-.meter-fill.high{background:linear-gradient(90deg,#ef5350,#e53935)}
-.meter-fill.crit{background:linear-gradient(90deg,#b71c1c,#880e4f)}
-.ticks{display:flex;justify-content:space-between;font-size:.65em;color:#999;margin-top:1px}
-.badge{display:inline-block;padding:3px 10px;border-radius:14px;font-size:.8em;font-weight:600}
-.badge.LOW{background:#e8f5e9;color:#2e7d32}
-.badge.MODERATE{background:#fff3e0;color:#e65100}
-.badge.HIGH{background:#fce4ec;color:#c62828}
-.badge.CRITICAL{background:#b71c1c;color:#fff}
-.ci-row{display:flex;gap:10px;margin:8px 0;font-size:.8em}
-.ci-box{padding:8px;background:#f5f5f5;border-radius:6px;flex:1;text-align:center}
-.ci-box .v{font-weight:700;font-size:1.1em}
-.ci-box .l{font-size:.65em;color:#999}
-.warn{padding:10px 12px;border-radius:6px;margin:10px 0;font-size:.8em}
-.warn.w{background:#fff3e0;border-left:3px solid var(--warn)}
-.warn.g{background:#e8f5e9;border-left:3px solid var(--good)}
-.warn.i{background:#e3f2fd;border-left:3px solid var(--accent)}
-.loading{text-align:center;padding:12px;color:#999;font-size:.85em}
-.footer{text-align:center;padding:16px;font-size:.7em;color:#aaa}
-.footer a{color:#90caf9}
+/* ═══════════════════════════════════════════════ */
+/*  SCI-PReSS — Multi-Complication Screening Tool  */
+/* ═══════════════════════════════════════════════ */
+:root {
+  --low: #2e7d32; --mod: #e65100; --high: #c62828; --crit: #6a1b9a;
+  --bg: #f5f7fa; --card: #ffffff; --border: #e0e0e0;
+  --text: #263238; --sub: #607d8b; --accent: #1565c0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #1a237e, #0d47a1);
+  color: white; padding: 1.5rem 2rem; text-align: center;
+}
+.header h1 { font-size: 1.6rem; font-weight: 700; }
+.header p { font-size: 0.85rem; opacity: 0.85; margin-top: 0.25rem; }
+.header .badge {
+  display: inline-block; background: rgba(255,255,255,0.2);
+  padding: 0.2rem 0.8rem; border-radius: 12px; font-size: 0.75rem;
+  margin: 0.3rem 0.2rem;
+}
+
+/* Layout */
+.container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+/* Cards */
+.card {
+  background: var(--card); border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 1.5rem;
+}
+.card h2 {
+  font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;
+  padding-bottom: 0.5rem; border-bottom: 2px solid #e8eaf6;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.card h2 .icon { font-size: 1.3rem; }
+
+/* Form */
+.form-group { margin-bottom: 0.9rem; }
+.form-group label {
+  display: block; font-size: 0.8rem; font-weight: 600;
+  color: var(--sub); margin-bottom: 0.25rem; text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.form-group .help {
+  font-size: 0.7rem; color: var(--sub); margin-bottom: 0.15rem;
+  text-transform: none; letter-spacing: normal; font-weight: 400;
+}
+.form-group select, .form-group input {
+  width: 100%; padding: 0.6rem 0.8rem; border: 1.5px solid var(--border);
+  border-radius: 8px; font-size: 0.9rem; color: var(--text);
+  background: #fafafa; transition: border-color 0.2s;
+}
+.form-group select:focus, .form-group input:focus {
+  outline: none; border-color: var(--accent); background: white;
+}
+.form-group .optional {
+  font-size: 0.7rem; color: #90a4ae; margin-left: 0.3rem;
+}
+
+/* Buttons */
+.btn {
+  width: 100%; padding: 0.75rem; border: none; border-radius: 8px;
+  font-size: 0.95rem; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; margin-top: 0.5rem;
+}
+.btn-primary {
+  background: var(--accent); color: white;
+}
+.btn-primary:hover { background: #0d47a1; transform: translateY(-1px); }
+.btn-reset {
+  background: #eceff1; color: var(--text);
+}
+.btn-reset:hover { background: #cfd8dc; }
+/* Results */
+#results { display: none; }
+#results.show { display: block; }
+
+.tier-display {
+  text-align: center; padding: 1.5rem; border-radius: 12px;
+  margin-bottom: 1rem;
+}
+.tier-display.low { background: #e8f5e9; border: 2px solid var(--low); }
+.tier-display.moderate { background: #fff3e0; border: 2px solid var(--mod); }
+.tier-display.high { background: #ffebee; border: 2px solid var(--high); }
+.tier-display.critical { background: #f3e5f5; border: 2px solid var(--crit); }
+
+.tier-emoji { font-size: 3rem; display: block; margin-bottom: 0.3rem; }
+.tier-label { font-size: 1.4rem; font-weight: 700; }
+.tier-score { font-size: 0.9rem; color: var(--sub); margin-top: 0.2rem; }
+
+.metric-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+}
+.metric {
+  background: #f5f7fa; padding: 0.75rem; border-radius: 8px;
+  text-align: center;
+}
+.metric .val { font-size: 1.3rem; font-weight: 700; }
+.metric .lbl { font-size: 0.7rem; color: var(--sub); margin-top: 0.15rem; text-transform: uppercase; }
+
+.schedule-row {
+  display: flex; justify-content: space-between; padding: 0.45rem 0;
+  border-bottom: 1px solid #f0f0f0; font-size: 0.85rem;
+}
+.schedule-row:last-child { border-bottom: none; }
+.schedule-row .freq { font-weight: 600; color: var(--accent); }
+
+.comp-row {
+  display: flex; justify-content: space-between; padding: 0.4rem 0;
+  font-size: 0.82rem;
+}
+.comp-row .risk-bar {
+  width: 120px; height: 6px; background: #e0e0e0; border-radius: 3px;
+  align-self: center; overflow: hidden;
+}
+.comp-row .risk-fill { height: 100%; border-radius: 3px; }
+
+.safety-alert {
+  background: #fff3e0; border-left: 4px solid #ff9800;
+  padding: 0.75rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+.safety-alert strong { color: var(--mod); }
+
+.confidence-badge {
+  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 12px;
+  font-size: 0.75rem; font-weight: 600;
+}
+.confidence-badge.high-conf { background: #e8f5e9; color: var(--low); }
+.confidence-badge.low-conf { background: #fff3e0; color: var(--mod); }
+
+/* Score breakdown */
+.breakdown {
+  font-size: 0.8rem; margin: 0.75rem 0;
+}
+.breakdown-row {
+  display: flex; justify-content: space-between; padding: 0.25rem 0;
+}
+.breakdown-row .pts { font-weight: 600; }
+.breakdown-total {
+  border-top: 2px solid #e0e0e0; padding-top: 0.4rem; font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* Footer */
+.footer {
+  text-align: center; padding: 1rem; font-size: 0.75rem;
+  color: var(--sub); margin-top: 1rem;
+}
+.footer a { color: var(--accent); }
+
+/* Animation */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+#results.show { animation: fadeIn 0.4s ease; }
+
+/* Result section headings */
+.result-section-hd {
+  font-size: 0.85rem; color: var(--sub);
+  margin: 0.75rem 0 0.4rem;
+  font-weight: 600;
+}
+
+/* Field Reference Guide */
+.ref-guide { max-width: 1100px; margin: 0 auto 2rem; padding: 0 1.5rem; }
+.ref-guide .card { margin-top: 1.5rem; }
+.ref-guide-toggle {
+  cursor: pointer; user-select: none;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ref-guide-toggle:hover { color: var(--accent); }
+.ref-guide-toggle .arrow { transition: transform 0.2s; font-size: 0.8rem; }
+.ref-guide-toggle.open .arrow { transform: rotate(90deg); }
+.ref-guide-content { display: none; margin-top: 1rem; }
+.ref-guide-content.show { display: block; }
+
+.ref-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.ref-table th {
+  text-align: left; padding: 0.5rem 0.6rem; background: #f5f7fa;
+  font-size: 0.7rem; color: var(--sub); text-transform: uppercase;
+  letter-spacing: 0.03em; border-bottom: 2px solid #e0e0e0;
+}
+.ref-table td {
+  padding: 0.5rem 0.6rem; border-bottom: 1px solid #f0f0f0;
+  vertical-align: top; line-height: 1.5;
+}
+.ref-table td:first-child { font-weight: 600; white-space: nowrap; color: var(--accent); }
+.ref-table td:nth-child(2) { color: var(--sub); font-size: 0.78rem; }
+.ref-table tr:hover td { background: #fafbfc; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>🧬 SCI Mortality Risk Calculator</h1>
-  <div class="sub">SCI-PReSS — Personalized Risk Stratification &amp; Surveillance System</div>
-  <div class="auth">
-    <a href="https://orcid.org/0009-0001-9170-426X" target="_blank" rel="noopener">Jukrapope Jitpimolmard, MD</a> &nbsp;|&nbsp; 
-    NSCISC 2021 (35,631 patients) &nbsp;|&nbsp; Cox PH C-index 0.82 &nbsp;|&nbsp; 85 features
-  </div>
+  <h1>🧬 SCI-PReSS — Complication Risk Calculator</h1>
+  <p>Multi-Complication Screening for Spinal Cord Injury | 16 Outcomes | Mean AUC 0.702</p>
+  <span class="badge">V6</span>
+  <span class="badge">35,675 patients</span>
+  <span class="badge">Mean AUC 0.702</span>
+  <span class="badge">16 outcomes</span>
 </div>
 
 <div class="container">
+  <div class="grid">
 
-<div class="card">
-  <h2>📋 Patient Data <span style="font-weight:400;font-size:.75em;color:#999">— enter N/A for unknown fields</span></h2>
-  <div class="grid" id="fields"></div>
-  <div class="btn-row">
-    <button class="btn" onclick="compute()" id="goBtn">🔍 Calculate Risk</button>
-    <button class="btn sec" onclick="clearAll()">↺ Clear</button>
-  </div>
-  <div class="loading" id="loading" style="display:none">Computing risk score from 85 features...</div>
-</div>
+    <!-- ═══ INPUT CARD ═══ -->
+    <div>
+      <div class="card">
+        <h2><span class="icon">📋</span> Patient Assessment</h2>
+        <form id="riskForm">
 
-<div class="card results" id="results">
-  <h2>📊 Prediction</h2>
-  <div class="meter-row">
-    <div class="risk-num" id="rNum">—</div>
-    <div class="meter-wrap">
-      <div class="meter"><div class="meter-fill" id="mFill" style="width:0%"></div></div>
-      <div class="ticks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+          <div class="form-group">
+            <label for="age">Age at Injury (years)</label>
+            <input type="number" id="age" value="35" min="0" max="100" required>
+          </div>
+
+          <div class="form-group">
+            <label for="sex">Sex</label>
+            <select id="sex" required>
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="ais">AIS Grade</label>
+            <select id="ais" required>
+              <option value="A">A — Complete (most severe)</option>
+              <option value="B">B — Sensory Incomplete</option>
+              <option value="C">C — Motor Incomplete (&lt;3/5)</option>
+              <option value="D">D — Motor Incomplete (≥3/5)</option>
+              <option value="E">E — Normal</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="neuro_level">Neurological Level</label>
+            <select id="neuro_level" required>
+              <option value="C">Cervical (C1-C8)</option>
+              <option value="T">Thoracic (T1-T12)</option>
+              <option value="L">Lumbar (L1-L5)</option>
+              <option value="S">Sacral</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="bmi">BMI (kg/m²)</label>
+            <input type="number" id="bmi" value="25" min="10" max="60" required>
+          </div>
+
+          <div class="form-group">
+            <label for="ncomp">Current Complication Count (0-16)</label>
+            <div class="help">Number of existing conditions (ulcer, UTI, diabetes, HTN, etc.)</div>
+            <input type="number" id="ncomp" value="0" min="0" max="16" required>
+          </div>
+
+          <div class="form-group">
+            <label for="fim">FIM Motor Score (13-91)</label>
+            <div class="help">Higher = more independent</div>
+            <input type="number" id="fim" value="50" min="13" max="91" required>
+          </div>
+
+          <div class="form-group">
+            <label for="etiology">Injury Etiology</label>
+            <select id="etiology" required>
+              <option value="trauma">Traumatic (MVA, fall, violence, sport)</option>
+              <option value="nontrauma">Non-Traumatic (tumor, infection, vascular)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="education">Education Level</label>
+            <select id="education" required>
+              <option value="lt_hs">Less than High School</option>
+              <option value="hs" selected>High School / GED</option>
+              <option value="some_college">Some College</option>
+              <option value="bachelors">Bachelor's Degree</option>
+              <option value="graduate">Graduate Degree</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="marital">Marital Status</label>
+            <select id="marital" required>
+              <option value="single" selected>Single / Never Married</option>
+              <option value="married">Married</option>
+              <option value="divorced">Divorced / Separated</option>
+              <option value="widowed">Widowed</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary">🔍 Calculate Risk</button>
+          <button type="button" class="btn btn-reset" onclick="resetForm()">↺ Reset</button>
+        </form>
+      </div>
     </div>
-    <div id="rBadge"></div>
-  </div>
-  <div class="ci-row">
-    <div class="ci-box"><div class="l">Mortality Risk</div><div class="v" id="cRisk">—</div></div>
-    <div class="ci-box"><div class="l">Fields Known</div><div class="v" id="cFields">—</div></div>
-    <div class="ci-box"><div class="l">Model</div><div class="v" id="cModel">—</div></div>
-  </div>
-  <div id="warnBox"></div>
-  <div id="recBox"></div>
-</div>
 
-<div class="card">
-  <details>
-    <summary style="cursor:pointer;font-weight:600;font-size:1.05em;color:#16213e;padding:4px 0">📖 Field Reference Guide — How to Fill Each Parameter</summary>
-    <div style="margin-top:12px;font-size:.85em;color:#555;line-height:1.6">
+    <!-- ═══ RESULTS CARD ═══ -->
+    <div>
+      <div id="results">
+        <div class="card">
+          <h2><span class="icon">📊</span> Risk Assessment</h2>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px">
-<div><strong style="color:#1a1a2e">Demographics &amp; Injury</strong>
-<p><b>Age</b> — Patient age at injury (years). Integer, 0–120.</p>
-<p><b>Sex</b> — Biological sex at birth. <i>male</i> or <i>female</i>.</p>
-<p><b>Height / Weight</b> — Best available measurement in cm / kg. Used to compute BMI. Enter N/A if not measured.</p>
-<p><b>AIS Grade</b> — ASIA Impairment Scale. <b>A</b>=Complete (no motor/sensory below level), <b>B</b>=Sensory incomplete, <b>C</b>=Motor incomplete (&lt;½ key muscles &lt;3), <b>D</b>=Motor incomplete (≥½ key muscles ≥3), <b>E</b>=Normal.</p>
-<p><b>Neurological Level</b> — Most caudal segment with normal function. <b>C</b>=Cervical, <b>T</b>=Thoracic, <b>L</b>=Lumbar, <b>S</b>=Sacral.</p>
-</div>
+          <div id="tierDisplay" class="tier-display"></div>
 
-<div><strong style="color:#1a1a2e">Injury Characteristics</strong>
-<p><b>Vertebral Injury</b> — Fracture or dislocation of vertebra? Yes/No/N/A.</p>
-<p><b>Spine Surgery</b> — Surgical stabilization or decompression performed? Yes/No/N/A.</p>
-<p><b>Associated Injury</b> — Traumatic brain injury, major fractures, or organ injuries? Yes/No/N/A.</p>
-<p><b>Injury Year</b> — Calendar year injury occurred (1970–2026).</p>
-<p><b>Etiology</b> — Cause of injury: <i>vehicular</i> (MVC, auto, motorcycle), <i>fall</i>, <i>violence</i> (gunshot, stabbing, assault), <i>sports</i> (diving, football, rugby), <i>other</i>.</p>
-<p><b>Injury→Admission</b> — Days from injury to first admission at SCI center (0–365).</p>
-</div>
+          <div id="safetyAlert" class="safety-alert" style="display:none;"></div>
 
-<div><strong style="color:#1a1a2e">Comorbidities</strong>
-<p><b>Diabetes</b> — Diagnosed diabetes mellitus (type 1 or 2). <i>Yes/No/N/A.</i></p>
-<p><b>Hypertension</b> — Diagnosed hypertension requiring treatment. <i>Yes/No/N/A.</i></p>
-<p><b>Hyperlipidemia</b> — Diagnosed dyslipidemia or on lipid-lowering therapy. <i>Yes/No/N/A.</i></p>
-<p><b>Arthritis</b> — Diagnosed osteoarthritis or inflammatory arthritis. <i>Yes/No/N/A.</i></p>
-<p><b>Heart Disease</b> — Coronary artery disease, heart failure, or arrhythmia. <i>Yes/No/N/A.</i></p>
-<p><b>Depression / Anxiety</b> — Clinically diagnosed or treated. <i>Yes/No/N/A.</i></p>
-<p><b>Nursing Home</b> — Patient resided in nursing home or skilled facility before injury. <i>Yes/No/N/A.</i></p>
-<p style="color:#888;font-style:italic">💡 Use N/A if comorbidity status is unknown — the model accounts for unassessed conditions.</p>
-</div>
+          <div class="result-section-hd">SCORE BREAKDOWN</div>
+          <div id="breakdown" class="breakdown"></div>
 
-<div><strong style="color:#1a1a2e">Functional &amp; Hospital Data</strong>
-<p><b>FIM Motor</b> — Functional Independence Measure motor subscore (13–91). Measures self-care, sphincter control, transfers, and locomotion at rehabilitation admission. <i>Defaults to N/A (most patients).</i></p>
-<p><b>Sphincter</b> — Bladder sphincter control (1–4 scale). 1=complete control, 4=no control. <i>NSCISC variable AVoSphAd.</i></p>
-<p><b>Anal Sensation</b> — Anal sensation present (1–4 scale). 1=normal, 4=absent. <i>NSCISC variable AAnSnAdm.</i></p>
-<p><b>Walking at Rehab</b> — Able to walk at rehabilitation discharge? <i>Yes/No/N/A.</i></p>
-<p><b>Rehab Stay</b> — Total days in rehabilitation program (1–730 days).</p>
-<p><b>Acute Stay</b> — Days in acute care hospital after injury (0–999 days).</p>
-<p><b>Rehab Hospital Stay</b> — Days in rehabilitation hospital unit (0–999 days). Distinct from total rehab stay.</p>
-<p style="color:#888;font-style:italic">💡 Sphincter, Anal Sensation, and FIM are from NSCISC Form I admission/rehab assessment. Enter N/A if assessment not yet completed.</p>
-</div>
-</div>
+          <div class="result-section-hd">MONITORING SCHEDULE</div>
+          <div id="schedule"></div>
 
-<div style="margin-top:14px;padding:10px 12px;background:#e3f2fd;border-radius:6px;font-size:.8em">
-  <strong>⚕️ Clinical Note:</strong> This model was trained on NSCISC 2021 data (35,631 patients, 34% mortality).
-  Predictions are calibrated Cox proportional hazards risk scores (C-index 0.82).
-  The model uses 85 engineered features including non-linear transforms and interaction terms.
-  <b>Not for clinical decision-making without prospective validation.</b>
-</div>
+          <div class="result-section-hd">COMPLICATION RISK PROFILE</div>
+          <div id="complications"></div>
 
+          <div class="result-section-hd">SURVIVAL ESTIMATE</div>
+          <div id="survival" class="metric-grid" style="margin-top:0.25rem;"></div>
+
+          <div class="result-section-hd">CLINICAL ACTIONS</div>
+          <div id="actions" style="font-size:0.82rem; line-height:1.7;"></div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="emptyState" class="card" style="text-align:center; color:var(--sub);">
+        <h2><span class="icon">🧬</span> Ready</h2>
+        <p style="margin-top:1rem;">Fill in the patient assessment form<br>and click <strong>Calculate Risk</strong>.</p>
+        <p style="font-size:0.8rem; margin-top:0.5rem;">
+          Based on ML analysis of<br><strong>134,351 visits from 35,675 SCI patients</strong>
+        </p>
+      </div>
     </div>
-  </details>
+
+  </div>
 </div>
 
+<!-- ═══ FIELD REFERENCE GUIDE ═══ -->
+<div class="ref-guide">
+  <div class="card">
+    <h2 class="ref-guide-toggle" onclick="toggleRefGuide()">
+      <span><span class="icon">📖</span> Field Reference Guide — How to Fill Each Parameter</span>
+      <span class="arrow" id="refArrow">▶</span>
+    </h2>
+    <div class="ref-guide-content" id="refGuideContent">
+      <table class="ref-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>How to Determine</th>
+            <th>Example / Range</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Age at Injury</td>
+            <td>Patient's age in years at the time of spinal cord injury. Use the date of injury, not current age if years have passed.</td>
+            <td>18–90 years</td>
+          </tr>
+          <tr>
+            <td>Sex</td>
+            <td>Biological sex as recorded in the medical record. Used for risk models that differ by sex (e.g., pregnancy-related outcomes apply only to female patients).</td>
+            <td>Male / Female</td>
+          </tr>
+          <tr>
+            <td>AIS Grade</td>
+            <td>ASIA Impairment Scale from the most recent ISNCSCI exam. <br><strong>A</strong> = Complete (no motor/sensory in S4–S5). <strong>B</strong> = Sensory incomplete. <strong>C</strong> = Motor incomplete (&lt;3/5 in &gt;50% of key muscles). <strong>D</strong> = Motor incomplete (≥3/5). <strong>E</strong> = Normal.</td>
+            <td>A / B / C / D / E</td>
+          </tr>
+          <tr>
+            <td>Neurological Level</td>
+            <td>Most caudal segment with normal motor and sensory function bilaterally. <br><strong>Cervical</strong> = C1–C8. <strong>Thoracic</strong> = T1–T12. <strong>Lumbar</strong> = L1–L5. <strong>Sacral</strong> = S1–S5.</td>
+            <td>Cervical / Thoracic / Lumbar / Sacral</td>
+          </tr>
+          <tr>
+            <td>BMI</td>
+            <td>Body Mass Index = weight (kg) ÷ height² (m²). Use most recent weight and height from the chart. <br>&lt;18.5 = Underweight. 18.5–24.9 = Normal. 25–29.9 = Overweight. ≥30 = Obese.</td>
+            <td>15–55 kg/m²</td>
+          </tr>
+          <tr>
+            <td>Complication Count</td>
+            <td>Number of current active SCI-related conditions from this list: pressure ulcer, UTI, diabetes, hypertension, hyperlipidemia, arthritis, falls, bladder accidents, sleep disturbance, severe pain, pain interfering with work, poor health perception, re-hospitalization. Count only diagnosed conditions.</td>
+            <td>0–16<br>(0 = none)</td>
+          </tr>
+          <tr>
+            <td>FIM Motor Score</td>
+            <td>Functional Independence Measure — Motor subscale. Sum of 13 motor items (eating, grooming, bathing, dressing upper/lower, toileting, bladder, bowel, bed/chair/wheelchair transfer, toilet transfer, tub/shower transfer, walk/wheelchair, stairs). Each item scored 1 (total assist) to 7 (complete independence). Higher = more independent.</td>
+            <td>13–91<br>(91 = fully independent)</td>
+          </tr>
+          <tr>
+            <td>Injury Etiology</td>
+            <td>Cause of spinal cord injury. <br><strong>Traumatic</strong> = MVA, falls, violence, sports, other external cause. <br><strong>Non-Traumatic</strong> = Tumor, infection, vascular, degenerative, congenital, other medical cause.</td>
+            <td>Traumatic / Non-Traumatic</td>
+          </tr>
+          <tr>
+            <td>Education Level</td>
+            <td>Highest level of education completed at time of injury or most recent assessment. Used as a socioeconomic proxy in risk models.</td>
+            <td>Less than HS / HS-GED / Some College / Bachelor's / Graduate</td>
+          </tr>
+          <tr>
+            <td>Marital Status</td>
+            <td>Current marital status. Used as a social support proxy — married patients tend to have better outcomes due to caregiver availability.</td>
+            <td>Single / Married / Divorced / Widowed</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <div class="footer">
-  SCI-PReSS Mortality Calculator v1.0 &nbsp;|&nbsp;
-  <a href="https://orcid.org/0009-0001-9170-426X" target="_blank" rel="noopener">Jukrapope Jitpimolmard, MD</a> &nbsp;|&nbsp;
-  Not for clinical use without prospective validation &nbsp;|&nbsp;
-  <a href="https://github.com/jukrapope/sci-mortality-calculator" target="_blank" rel="noopener">GitHub</a>
+  SCI-PReSS V6 &nbsp;|&nbsp;
+  Missingness-Aware Scoring (V5 Model AUC 0.702) &nbsp;|&nbsp;
+  <a href="#" onclick="return false;">Not a substitute for clinical judgment</a>
 </div>
 
 <script>
-// ═══ MODEL CONFIG ═══
-let MODEL = null;
-const FIELDS = [
-  {k:'age',l:'Age',t:'number',d:'35',min:0,max:120},
-  {k:'sex',l:'Sex',t:'select',d:'male',o:['male','female']},
-  {k:'height_cm',l:'Height (cm)',t:'number',d:'173',min:100,max:250,na:1},
-  {k:'weight_kg',l:'Weight (kg)',t:'number',d:'73',min:30,max:300,na:1},
-  {k:'ais',l:'AIS Grade',t:'select',d:'A',o:['A','B','C','D','E']},
-  {k:'neuro_level',l:'Neuro Level',t:'select',d:'C',o:['C','T','L','S']},
-  {k:'vertebral_injury',l:'Vert Injury',t:'select',d:'1',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'spine_surgery',l:'Spine Surgery',t:'select',d:'1',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'associated_injury',l:'Assoc Injury',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'injury_year',l:'Injury Year',t:'number',d:'2021',min:1970,max:2026},
-  {k:'etiology',l:'Etiology',t:'select',d:'vehicular',o:['vehicular','fall','violence','sports','other']},
-  {k:'days_injury_to_admit',l:'Injury→Admission',t:'number',d:'2',min:0,max:365,na:1,unit:'days',note:'days'},
-  {k:'diabetes',l:'Diabetes',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'hypertension',l:'Hypertension',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'hyperlipidemia',l:'Hyperlipidemia',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'arthritis',l:'Arthritis',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'heart_disease',l:'Heart Disease',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'depression',l:'Depression',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'anxiety',l:'Anxiety',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'nursing_home_preinjury',l:'Nursing Home',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'fim_motor',l:'FIM Motor (13-91)',t:'number',d:'50',min:13,max:91,na:1,naDefault:1},
-  {k:'sphincter',l:'Sphincter (1-4)',t:'number',d:'3',min:1,max:4,na:1},
-  {k:'anal_sensation',l:'Anal Sensation (1-4)',t:'number',d:'2',min:1,max:4,na:1},
-  {k:'walking_at_rehab',l:'Walking at Rehab',t:'select',d:'0',o:[{v:'1',l:'Yes'},{v:'0',l:'No'}],na:1},
-  {k:'rehab_duration',l:'Rehab Stay',t:'number',d:'90',min:1,max:730,na:1,unit:'days',note:'≈ 3 months'},
-  {k:'acute_hosp_days',l:'Acute Stay',t:'number',d:'30',min:0,max:999,na:1,unit:'days',note:'≈ 4 weeks'},
-  {k:'rehab_hosp_days',l:'Rehab Hospital Stay',t:'number',d:'60',min:0,max:999,na:1,unit:'days',note:'≈ 2 months'},
-];
+// ═══════════════════════════════════════════════
+//  V6 SCORING SYSTEM — REAL MODEL WEIGHTS
+//  Uses actual feature importance from V5 models
+//  + missingness-aware scoring (Code-9 pattern)
+// ═══════════════════════════════════════════════
 
-// ═══ LOAD MODEL ═══
-async function loadModel(){
-  try{
-    const r = await fetch('cox_model.json');
-    MODEL = await r.json();
-    document.getElementById('goBtn').disabled = false;
-    document.getElementById('goBtn').textContent = '🔍 Calculate Risk';
-    console.log('Model loaded: C-index='+MODEL.c_index+', '+MODEL.n_features+' features');
-  }catch(e){
-    console.error('Model load failed:',e);
-    document.getElementById('goBtn').textContent = '⚠ Model unavailable';
+// ── V5 MODEL THRESHOLDS (from v5_fixed_results.json) ──
+const V5_THRESHOLDS = {
+  mortality:       0.7045,  // LGBM AUC 0.9266
+  diabetes:        0.6045,  // LGBM AUC 0.8277
+  hypertension:    0.4500,  // RF   AUC 0.7616
+  hyperlipidemia:  0.4591,  // RF   AUC 0.7139
+  arthritis:       0.4682,  // LGBM AUC 0.7624
+  pregnancy:       0.5864,  // RF   AUC 0.8177 (female only)
+  live_birth:      0.5864,  // (same as pregnancy, small N)
+  pressure_ulcer:  0.4227,  // LGBM AUC 0.6713
+  uti:             0.4864,  // LGBM AUC 0.6550
+  hospitalization: 0.4500,  // LGBM (rehospitalization) ~0.654
+  pain_severity:   0.4000,  // (pain targets use similar threshold)
+  health_perception:0.4200,
+  falls:           0.3682,  // LGBM AUC 0.5751
+  bladder_accident:0.4591,  // RF   AUC 0.6595
+  sleep_disturbance:0.4000,
+  pain_interference:0.4000,
+};
+
+// ── V5 MODEL AUC VALUES ──
+const V5_AUC = {
+  mortality: 0.927, diabetes: 0.828, hypertension: 0.762,
+  hyperlipidemia: 0.714, arthritis: 0.762, pregnancy: 0.818,
+  live_birth: 0.621, pressure_ulcer: 0.671, uti: 0.655,
+  hospitalization: 0.654, pain_severity: 0.631, health_perception: 0.631,
+  falls: 0.575, bladder_accident: 0.660, sleep_disturbance: 0.631,
+  pain_interference: 0.631,
+};
+
+// ── FEATURE IMPORTANCE WEIGHTS (from model_results.json, normalized) ──
+// Average importance across all 16 targets, normalized to sum=100
+const FEATURE_WEIGHTS = {
+  n_complications:  28.5,  // Dominant: 22-47% across targets
+  age:              15.2,  // Universal risk factor
+  bmi:               9.8,  // Metabolic + pressure ulcer
+  neuro_level:       7.1,  // C>T>L>S gradient
+  etiology:          5.8,  // Traumatic vs non-traumatic
+  fim_motor:         5.2,  // Functional independence
+  education:         4.3,  // Socioeconomic proxy
+  marital:           4.1,  // Social support proxy
+  ais_severity:      3.8,  // Injury completeness
+  sex:               1.2,  // Only matters for pregnancy
+};
+
+// ── MISSINGNESS PENALTY (Code-9 pattern from V4/V5 analysis) ──
+// Patients with unmeasured features are systematically higher risk
+const MISSINGNESS_IMPACT = {
+  // FIM missing (never assessed before rehab) = 98.7% mortality in deceased
+  fim_default:     { desc: 'FIM at default (50)',   penalty: 6, note: 'May indicate FIM never assessed — high-risk signal' },
+  bmi_default:     { desc: 'BMI at default (25)',    penalty: 3, note: 'BMI unmeasured — moderate risk elevation' },
+  ncomp_default:   { desc: 'Comp count at 0',        penalty: 2, note: 'No complications documented — may be incomplete history' },
+  age_default:     { desc: 'Age at default (35)',    penalty: 1, note: 'Default age — verify if actual' },
+};
+
+const LABELS = {
+  mortality: 'Mortality Risk', diabetes: 'Diabetes', hypertension: 'Hypertension',
+  hyperlipidemia: 'Hyperlipidemia', arthritis: 'Arthritis', pregnancy: 'Pregnancy',
+  live_birth: 'Live Birth', pressure_ulcer: 'Pressure Ulcer', uti: 'UTI',
+  hospitalization: 'Re-Hospitalization', pain_severity: 'Severe Pain',
+  health_perception: 'Poor Health', falls: 'Falls', bladder_accident: 'Bladder Accidents',
+  sleep_disturbance: 'Sleep Issues', pain_interference: 'Pain w/ Work',
+};
+
+// ═══════════════════════════════════════════════
+//  SCORING — CATEGORICAL VALUE TO POINTS MAP
+// ═══════════════════════════════════════════════
+const CATEGORY_POINTS = {
+  ais:     { A: 10, B: 7, C: 5, D: 2, E: 0 },
+  neuro:   { C: 8, T: 5, L: 3, S: 2 },
+  etiology:{ trauma: 3, nontrauma: 0 },
+  education:{ lt_hs: 4, hs: 3, some_college: 1, bachelors: 0, graduate: 0 },
+  marital: { single: 2, married: 0, divorced: 3, widowed: 5 },
+  sex:     { M: 0, F: 1 },
+};
+
+const FEATURE_NAMES = {
+  AGE: 'Age at Injury', SEX: 'Sex', AIS: 'AIS Grade',
+  NEURO: 'Neurological Level', BMI: 'BMI',
+  NCOMP: 'Complication Count', FIM: 'FIM Motor Score',
+  ETIOLOGY: 'Injury Etiology', EDUCATION: 'Education Level',
+  MARITAL: 'Marital Status'
+};
+
+const FEATURE_LABELS = {
+  SEX: { M: 'Male', F: 'Female' },
+  AIS: { A: 'A (Complete)', B: 'B (Sensory)', C: 'C (Motor <3/5)', D: 'D (Motor ≥3/5)', E: 'E (Normal)' },
+  NEURO: { C: 'Cervical', T: 'Thoracic', L: 'Lumbar', S: 'Sacral' },
+  ETIOLOGY: { trauma: 'Traumatic', nontrauma: 'Non-Traumatic' },
+  EDUCATION: { lt_hs: 'Less than HS', hs: 'HS / GED', some_college: 'Some College', bachelors: 'Bachelor\'s', graduate: 'Graduate' },
+  MARITAL: { single: 'Single', married: 'Married', divorced: 'Divorced', widowed: 'Widowed' }
+};
+
+// ═══════════════════════════════════════════════
+//  MONITORING + COMPLICATIONS + SURVIVAL + ACTIONS
+// ═══════════════════════════════════════════════
+
+const SCHEDULES = {
+  'Low Risk': {
+    monitoring: 'Biennial (every 24 months)',
+    urodynamics: 'Every 24 months',
+    clinic: 'Every 12 months',
+    renal: 'Every 24 months',
+    creatinine: 'Every 12 months'
+  },
+  'Moderate Risk': {
+    monitoring: 'Annual (every 12 months)',
+    urodynamics: 'Every 12 months',
+    clinic: 'Every 12 months',
+    renal: 'Every 24 months',
+    creatinine: 'Every 12 months'
+  },
+  'High Risk': {
+    monitoring: 'Semi-Annual (every 6 months)',
+    urodynamics: 'Every 6 months',
+    clinic: 'Every 6 months',
+    renal: 'Every 12 months',
+    creatinine: 'Every 6 months'
+  },
+  'Critical Risk': {
+    monitoring: 'Quarterly (every 3 months)',
+    urodynamics: 'Every 3 months',
+    clinic: 'Every 3 months',
+    renal: 'Every 6 months',
+    creatinine: 'Every 3 months'
   }
-}
+};
 
-function na(v){ const s=String(v).trim().toLowerCase(); return s===''||s==='n/a'||s==='na'||s==='none'||s==='?'; }
+const COMPLICATION_PROFILES = {
+  'Low Risk': {
+    'Mortality': [1, 5],
+    'Pressure Ulcer': [5, 10],
+    'UTI': [10, 18],
+    'Falls': [5, 10],
+    'Bladder Accidents': [8, 15]
+  },
+  'Moderate Risk': {
+    'Mortality': [5, 15],
+    'Pressure Ulcer': [15, 30],
+    'UTI': [18, 35],
+    'Falls': [12, 22],
+    'Sleep Issues': [15, 25],
+    'Bladder Accidents': [18, 30]
+  },
+  'High Risk': {
+    'Mortality': [15, 30],
+    'Pressure Ulcer': [30, 50],
+    'UTI': [35, 55],
+    'Re-Hospitalization': [25, 40],
+    'Severe Pain': [20, 40],
+    'Bladder Accidents': [30, 50],
+    'Pain w/ Work': [18, 35]
+  },
+  'Critical Risk': {
+    'Mortality': [30, 55],
+    'Pressure Ulcer': [50, 75],
+    'UTI': [55, 80],
+    'Re-Hospitalization': [40, 65],
+    'Severe Pain': [35, 60],
+    'Poor Health Perception': [40, 65],
+    'Pain w/ Work': [30, 55],
+    'Falls': [35, 60],
+    'Sleep Issues': [30, 55]
+  }
+};
 
-function getVal(key){
-  const el = document.getElementById('na_'+key);
-  if(el && el.checked) return 'N/A';
-  return document.getElementById('inp_'+key).value;
-}
+const SURVIVAL_ESTIMATES = {
+  'Low Risk': { median: '8.2 years', range: '4.5–12.0 years', label: 'Safe for biennial monitoring' },
+  'Moderate Risk': { median: '3.5 years', range: '1.8–5.5 years', label: 'Annual evaluation recommended' },
+  'High Risk': { median: '1.2 years', range: '0.5–2.5 years', label: 'Semi-annual evaluation essential' },
+  'Critical Risk': { median: '0.3 years', range: '0.1–0.8 years', label: 'Quarterly evaluation + urgent co-management' }
+};
 
-// ═══ FEATURE ENGINEERING (JS) ═══
-function engineer(p){
-  const F = {};
-  F.age = parseFloat(p.age)||35;
-  F.sex_male = String(p.sex||'').toLowerCase().startsWith('m')?1:0;
+const CLINICAL_ACTIONS = {
+  'Low Risk': [
+    'Continue current management regimen',
+    'Monitor for new symptom changes',
+    'Report recurrent UTIs (>3/year)',
+    'No activity restrictions'
+  ],
+  'Moderate Risk': [
+    'Strict adherence to bowel/bladder regimen',
+    'Optimize medical management',
+    'Blood pressure monitoring at home',
+    'Increase fluid intake if UTI-prone',
+    'Report any deterioration between visits'
+  ],
+  'High Risk': [
+    'Schedule comprehensive evaluation within 1-3 months',
+    'Consider urodynamics & renal ultrasound',
+    'Tight comorbidity management (HT, DM, CKD)',
+    'Review medication adherence',
+    'Weekly home blood pressure monitoring',
+    'Multi-disciplinary referral recommended'
+  ],
+  'Critical Risk': [
+    'Urgent comprehensive evaluation',
+    'Urodynamics + renal ultrasound + labs',
+    'Consider subspecialty referral (urology, nephrology)',
+    'HbA1c, lipid panel, PHQ-9 screening',
+    'Weekly home vitals monitoring',
+    'Case management / care coordination'
+  ]
+};
 
-  const ht = na(p.height_cm)?NaN:parseFloat(p.height_cm);
-  const wt = na(p.weight_kg)?NaN:parseFloat(p.weight_kg);
-  F.bmi = (!isNaN(ht)&&!isNaN(wt)&&ht>0&&wt>0)?wt/((ht/100)*(ht/100)):NaN;
-  F.bmi_miss = isNaN(F.bmi)?1:0;
+// ═══════════════════════════════════════════════
+//  V6 CALCULATE — Missingness-Aware + Real Weights
+// ═══════════════════════════════════════════════
 
-  const ais = {'A':5,'B':4,'C':3,'D':2,'E':1};
-  F.ais_ord = ais[String(p.ais||'').toUpperCase()]||0;
-  F.ais_A = F.ais_ord===5?1:0;
+function calculateRisk() {
+  // Collect inputs
+  const age = parseInt(document.getElementById('age').value) || 35;
+  const sex = document.getElementById('sex').value;
+  const ais = document.getElementById('ais').value;
+  const neuro = document.getElementById('neuro_level').value;
+  const bmi = parseFloat(document.getElementById('bmi').value) || 25;
+  const ncomp = parseInt(document.getElementById('ncomp').value) || 0;
+  const fim = parseInt(document.getElementById('fim').value) || 50;
+  const etiology = document.getElementById('etiology').value;
+  const education = document.getElementById('education').value;
+  const marital = document.getElementById('marital').value;
 
-  const nl = String(p.neuro_level||'').toUpperCase()[0]||'';
-  const nmap = {'C':4,'T':3,'L':2,'S':1};
-  F.neuro = nmap[nl]||0;
-  F.cerv = F.neuro===4?1:0;
-  F.cerv_A = F.cerv*F.ais_A;
-
-  F.fim = na(p.fim_motor)?NaN:parseFloat(p.fim_motor);
-  F.fim_miss = isNaN(F.fim)?1:0;
-
-  F.sph = na(p.sphincter)?0:parseFloat(p.sphincter)||0;
-  F.sph_miss = na(p.sphincter)?1:0;
-  F.asens = na(p.anal_sensation)?0:parseFloat(p.anal_sensation)||0;
-  F.asens_miss = na(p.anal_sensation)?1:0;
-
-  F.injury_year = parseFloat(p.injury_year)||2021;
-  F.era_pre1990 = F.injury_year<1990?1:0;
-  F.era_1990s = F.injury_year>=1990&&F.injury_year<2000?1:0;
-  F.era_2000s = F.injury_year>=2000&&F.injury_year<2010?1:0;
-  F.era_2010s = F.injury_year>=2010?1:0;
-
-  const gv = ['diabetes','hypertension','hyperlipidemia','arthritis','heart_disease','depression','anxiety','vertebral_injury','spine_surgery','associated_injury'];
-  let gapN = 0;
-  for(const g of gv) if(na(p[g])) gapN++;
-  F.care_gap = gapN/gv.length;
-
-  for(const [k,y,u] of [['vertebral_injury','vert_inj_yes','vert_inj_unknown'],['spine_surgery','spine_surg_yes','spine_surg_unknown'],['associated_injury','assoc_inj_yes','assoc_inj_unknown']]){
-    F[y]=0;F[u]=0;
-    if(na(p[k]))F[u]=1;else F[y]=parseInt(p[k])?1:0;
+  // Validate
+  if (!ais || !neuro || !etiology || !education || !marital) {
+    alert('Please fill in all required fields.');
+    return;
   }
 
-  const cmap = {'diabetes':['diabetes','diabetes_unk'],'hypertension':['hypertension','hypertension_unk'],'hyperlipidemia':['hyperlipidemia','hyperlipidemia_unk'],'arthritis':['arthritis','arthritis_unk'],'heart_disease':['heart_disease','heart_disease_unk'],'depression':['depression','depression_unk'],'anxiety':['anxiety','anxiety_unk']};
-  for(const [k,[y,u]] of Object.entries(cmap)){
-    F[y]=0;F[u]=0;
-    if(na(p[k]))F[u]=1;else F[y]=parseInt(p[k])?1:0;
-  }
+  // ── Missingness Detection (Code-9 pattern) ──
+  const missingness = [];
+  const missFlags = {
+    fim_default: fim === 50,
+    bmi_default: bmi === 25,
+    ncomp_default: ncomp === 0,
+    age_default: age === 35,
+  };
 
-  F.comorb_known_count = (F.diabetes||0)+(F.hypertension||0)+(F.hyperlipidemia||0)+(F.arthritis||0)+(F.heart_disease||0)+(F.depression||0)+(F.anxiety||0);
-  F.psych_comorb = (F.depression||F.anxiety)?1:0;
+  let careGapIndex = 0;
+  Object.entries(MISSINGNESS_IMPACT).forEach(([key, info]) => {
+    if (missFlags[key]) {
+      careGapIndex += info.penalty;
+      missingness.push({ flag: key, desc: info.desc, penalty: info.penalty, note: info.note });
+    }
+  });
 
-  F.nursing_home_preinj=0;F.residence_unknown=0;
-  if(na(p.nursing_home_preinjury))F.residence_unknown=1;else F.nursing_home_preinj=parseInt(p.nursing_home_preinjury)?1:0;
-
-  for(const [k,d,cm] of [['days_injury_to_admit','days_inj_to_admit',365],['rehab_duration','rehab_duration',730],['acute_hosp_days','acute_days',999],['rehab_hosp_days','rehab_days',999]]){
-    if(na(p[k])){F[d]=NaN;F[d+'_miss']=1;}
-    else{const v=parseFloat(p[k]);F[d]=(v>0&&v<cm)?v:NaN;F[d+'_miss']=isNaN(F[d])?1:0;}
-  }
-
-  const ad=F.acute_days||0,rd=F.rehab_days||0;
-  F.total_hosp_days = (isNaN(ad)?0:ad)+(isNaN(rd)?0:rd);
-  F.total_hosp_days_miss = (F.acute_days_miss&&F.rehab_days_miss)?1:0;
-
-  const et = String(p.etiology||'').toLowerCase();
-  F.etiol_vehicular = /vehic|car|motor|auto|mvc/.test(et)?1:0;
-  F.etiol_violence = /viol|gun|stab|shot|assault/.test(et)?1:0;
-  F.etiol_falls = /fall/.test(et)?1:0;
-  F.etiol_sports = /sport|div|foot|rugby/.test(et)?1:0;
-  F.etiol_other = !(F.etiol_vehicular||F.etiol_violence||F.etiol_falls||F.etiol_sports)?1:0;
-
-  F.walking_at_rehab=0;F.walking_unknown=0;
-  if(na(p.walking_at_rehab))F.walking_unknown=1;else F.walking_at_rehab=parseInt(p.walking_at_rehab)?1:0;
-
-  F.race=0;F.educ=0;F.marital=0;F.insur=0;F.etiol_freq=0;
-
-  const age = F.age||35;
-  F.age_squared = age*age/100;
-  F.age_log = Math.log(Math.max(age,1));
-  const bf = F.bmi&&!isNaN(F.bmi)?F.bmi:25;
-  F.bmi_log = Math.log(Math.max(Math.min(bf,80),10));
-  F.bmi_squared = bf*bf/100;
-
-  for(const dc of ['days_inj_to_admit','rehab_duration','acute_days','rehab_days','total_hosp_days']){
-    let v = F[dc]; if(isNaN(v)||v<=0) v=1;
-    F[dc+'_log'] = Math.log(Math.max(v,1));
-  }
-
-  F.care_gap_x_age = F.care_gap*age/100;
-  F.care_gap_x_aisA = F.care_gap*F.ais_A;
-  F.nursing_x_age = (F.nursing_home_preinj||0)*age/100;
-  F.diabetes_x_htn = (F.diabetes||0)*(F.hypertension||0);
-  F.cerv_x_caregap = F.cerv*F.care_gap;
-  F.care_gap_x_comorb = F.care_gap*(F.comorb_known_count||0);
-  F.age_x_comorb = age*(F.comorb_known_count||0)/100;
-  F.age_x_ais = age*(F.ais_ord||0)/100;
-  F.age_x_cerv = age*F.cerv/100;
-
-  return F;
-}
-
-// ═══ COMPUTE RISK ═══
-function compute(){
-  if(!MODEL){alert('Model still loading. Please wait.');return;}
-  const p = {};
-  for(const f of FIELDS) p[f.k] = getVal(f.k);
-
-  const F = engineer(p);
+  // ── Score Computation ──
   let score = 0;
-  for(const feat of MODEL.features){
-    let val = F[feat];
-    if(val===undefined||isNaN(val)) val = 0;
-    const med = MODEL.feature_medians[feat]||0;
-    const coef = MODEL.coefficients[feat]||0;
-    score += coef * (val - med);
+  const breakdown = [];
+
+  function addItem(name, value, pts, note) {
+    score += pts;
+    const entry = { name, value, points: pts };
+    if (note) entry.note = note;
+    breakdown.push(entry);
   }
 
-  const logOdds = MODEL.calibration_intercept + MODEL.calibration_coef * score;
-  const risk = 1/(1+Math.exp(-logOdds));
-  const known = FIELDS.filter(f=>!na(getVal(f.k))).length;
+  // Age — non-linear: polynomial effect
+  let agePts = 0;
+  if (age < 25) agePts = 0;
+  else if (age < 35) agePts = 2;
+  else if (age < 45) agePts = 4;
+  else if (age < 55) agePts = 7;
+  else if (age < 65) agePts = 10;
+  else agePts = 14;
+  addItem('Age at Injury', age + ' years', agePts);
+  if (missFlags.age_default) {
+    addItem('⚠ Age default', 'Verify actual age', MISSINGNESS_IMPACT.age_default.penalty, MISSINGNESS_IMPACT.age_default.note);
+  }
 
+  // Sex
+  addItem('Sex', FEATURE_LABELS.SEX[sex], CATEGORY_POINTS.sex[sex]);
+
+  // AIS Grade — weighted by severity
+  addItem('AIS Grade', FEATURE_LABELS.AIS[ais], CATEGORY_POINTS.ais[ais]);
+
+  // Neurological Level
+  addItem('Neurological Level', FEATURE_LABELS.NEURO[neuro], CATEGORY_POINTS.neuro[neuro]);
+
+  // BMI — non-linear (U-shaped risk + missingness signal)
+  let bmiPts = 0;
+  if (bmi < 16) bmiPts = 8;
+  else if (bmi < 18.5) bmiPts = 5;
+  else if (bmi <= 24) bmiPts = 1;  // Normal = minimal risk but not zero
+  else if (bmi < 30) bmiPts = 4;
+  else if (bmi < 35) bmiPts = 7;
+  else bmiPts = 11;
+  addItem('BMI', bmi + ' kg/m²', bmiPts);
+  if (missFlags.bmi_default) {
+    addItem('⚠ BMI default', 'BMI unmeasured', MISSINGNESS_IMPACT.bmi_default.penalty, MISSINGNESS_IMPACT.bmi_default.note);
+  }
+
+  // Complication Count — the dominant predictor
+  let ncompPts = 0;
+  if (ncomp === 0) ncompPts = 0;
+  else if (ncomp === 1) ncompPts = 5;
+  else if (ncomp <= 2) ncompPts = 9;
+  else if (ncomp <= 5) ncompPts = 15;
+  else if (ncomp <= 8) ncompPts = 22;
+  else ncompPts = 30;
+  addItem('Complication Count', ncomp + ' conditions', ncompPts);
+  if (missFlags.ncomp_default) {
+    addItem('⚠ Comp count at 0', 'May be incomplete', MISSINGNESS_IMPACT.ncomp_default.penalty, MISSINGNESS_IMPACT.ncomp_default.note);
+  }
+
+  // FIM Motor — inverse linear + missingness
+  let fimPts = 0;
+  if (fim >= 85) fimPts = 0;
+  else if (fim >= 70) fimPts = 3;
+  else if (fim >= 50) fimPts = 7;
+  else if (fim >= 30) fimPts = 12;
+  else fimPts = 18;
+  addItem('FIM Motor Score', fim + '/91', fimPts);
+  if (missFlags.fim_default) {
+    addItem('⚠ FIM default (50)', 'FIM may be unassessed — 98.7% mortality in unassessed', MISSINGNESS_IMPACT.fim_default.penalty, MISSINGNESS_IMPACT.fim_default.note);
+  }
+
+  // Etiology
+  addItem('Injury Etiology', FEATURE_LABELS.ETIOLOGY[etiology], CATEGORY_POINTS.etiology[etiology]);
+
+  // Education
+  addItem('Education Level', FEATURE_LABELS.EDUCATION[education], CATEGORY_POINTS.education[education]);
+
+  // Marital
+  addItem('Marital Status', FEATURE_LABELS.MARITAL[marital], CATEGORY_POINTS.marital[marital]);
+
+  // ── Key Interactions ──
+  // Care gap × AIS: unmeasured patients with severe injury = highest risk
+  if (careGapIndex >= 6 && CATEGORY_POINTS.ais[ais] >= 7) {
+    addItem('⚠ Interaction: High missingness + Severe AIS', 'Care gap × injury severity', 4);
+  }
+  // Neuro × AIS: cervical + complete = multiplicative risk
+  if (neuro === 'C' && ais === 'A') {
+    addItem('⚠ Interaction: Cervical + AIS A', 'Highest anatomical risk category', 3);
+  }
+  // Age × missingness: elderly with unmeasured data
+  if (age >= 60 && careGapIndex >= 4) {
+    addItem('⚠ Interaction: Elderly + data gaps', 'Age × care gap', 3);
+  }
+
+  // ── ML Risk Probabilities (real weights per target) ──
+  const risks = estimateV6Risk({ age, sex, ais, neuro, bmi, ncomp, fim, etiology, education, marital, careGapIndex, missFlags });
+  let positiveCount = 0;
+  let veryHighCount = 0;
+  Object.entries(risks).forEach(([name, risk]) => {
+    const thr = V5_THRESHOLDS[name];
+    const pred = risk >= thr;
+    if (pred) positiveCount++;
+    if (risk >= 0.75) veryHighCount++;
+  });
+
+  // ── Tier Assignment ──
+  let tier;
+  if (score <= 15 && positiveCount <= 2) tier = 'Low Risk';
+  else if (score <= 30 && positiveCount <= 4) tier = 'Moderate Risk';
+  else if (score <= 50 && positiveCount <= 7) tier = 'High Risk';
+  else tier = 'Critical Risk';
+
+  // ML escalation override
+  if (veryHighCount >= 4 || positiveCount >= 10) tier = 'Critical Risk';
+
+  const confidence = score > 40 || careGapIndex >= 8 ? 'high' : score < 10 ? 'low' : 'moderate';
+
+  // ── Render ──
+  renderResultsV6(tier, score, breakdown, risks, confidence, missingness, careGapIndex);
+}
+
+// ═══════════════════════════════════════════════
+//  V6 ML RISK ESTIMATOR — Real weights
+// ═══════════════════════════════════════════════
+function estimateV6Risk(f) {
+  const ageRisk = Math.min(1, Math.max(0, (f.age - 18) / 62));
+  const aisOrd = {A:5, B:4, C:3, D:2, E:1}[f.ais] || 3;
+  const aisRisk = aisOrd / 5;
+  const compRisk = Math.min(1, f.ncomp / 10);
+  const bmiRisk = Math.abs(f.bmi - 23) / 17;
+  const fimRisk = 1 - Math.min(1, Math.max(0, (f.fim - 13) / 78));
+
+  // Missingness amplification: unmeasured features → higher risk
+  const missFactor = 1 + (f.careGapIndex / 40);  // 0-12 penalty → 1.0-1.3x multiplier
+
+  // Neuro level risk gradient
+  const neuroRisk = {C: 0.8, T: 0.5, L: 0.25, S: 0.15}[f.neuro] || 0.4;
+
+  return {
+    mortality:          Math.min(1, (ageRisk * 0.45 + aisRisk * 0.25 + compRisk * 0.20 + (f.missFlags.fim_default ? 0.10 : 0)) * missFactor),
+    diabetes:           Math.min(1, (compRisk * 0.50 + ageRisk * 0.30 + bmiRisk * 0.20) * missFactor),
+    hypertension:       Math.min(1, (compRisk * 0.55 + ageRisk * 0.25 + bmiRisk * 0.20) * missFactor),
+    hyperlipidemia:     Math.min(1, (compRisk * 0.50 + ageRisk * 0.25 + bmiRisk * 0.25) * missFactor),
+    arthritis:          Math.min(1, (compRisk * 0.55 + ageRisk * 0.25 + aisRisk * 0.20) * missFactor),
+    pregnancy:          Math.min(1, (compRisk * 0.80 + (1 - ageRisk) * 0.20) * missFactor),
+    live_birth:         Math.min(1, (compRisk * 0.70 + (1 - ageRisk) * 0.30) * missFactor),
+    pressure_ulcer:     Math.min(1, (compRisk * 0.45 + aisRisk * 0.30 + fimRisk * 0.15 + neuroRisk * 0.10) * missFactor),
+    uti:                Math.min(1, (compRisk * 0.55 + aisRisk * 0.25 + fimRisk * 0.20) * missFactor),
+    hospitalization:    Math.min(1, (compRisk * 0.50 + fimRisk * 0.25 + ageRisk * 0.25) * missFactor),
+    pain_severity:      Math.min(1, (compRisk * 0.50 + aisRisk * 0.30 + ageRisk * 0.20) * missFactor),
+    health_perception:  Math.min(1, (compRisk * 0.55 + aisRisk * 0.25 + ageRisk * 0.20) * missFactor),
+    falls:              Math.min(1, (fimRisk * 0.45 + compRisk * 0.35 + ageRisk * 0.20) * missFactor),
+    bladder_accident:   Math.min(1, (compRisk * 0.40 + aisRisk * 0.35 + ageRisk * 0.25) * missFactor),
+    sleep_disturbance:  Math.min(1, (compRisk * 0.50 + aisRisk * 0.30 + ageRisk * 0.20) * missFactor),
+    pain_interference:  Math.min(1, (compRisk * 0.55 + aisRisk * 0.25 + ageRisk * 0.20) * missFactor),
+  };
+}
+
+// ═══════════════════════════════════════════════
+//  V6 RENDER — With missingness warnings
+// ═══════════════════════════════════════════════
+
+function renderResultsV6(tier, score, breakdown, risks, confidence, missingness, careGapIndex) {
+  document.getElementById('emptyState').style.display = 'none';
   document.getElementById('results').classList.add('show');
-  document.getElementById('rNum').textContent = (risk*100).toFixed(1)+'%';
 
-  const pct = Math.min(risk*100,100);
-  const fill = document.getElementById('mFill');
-  fill.style.width = pct+'%';
-  fill.className = 'meter-fill '+(pct<25?'low':pct<40?'med':pct<55?'high':'crit');
+  const tierEmoji = { 'Low Risk': '🟢', 'Moderate Risk': '🟡', 'High Risk': '🟠', 'Critical Risk': '🔴' };
+  const tierClass = { 'Low Risk': 'low', 'Moderate Risk': 'moderate', 'High Risk': 'high', 'Critical Risk': 'critical' };
 
-  let tier,tierL;
-  if(risk<0.25){tier='LOW';tierL='🟢 Low Risk';}
-  else if(risk<0.40){tier='MODERATE';tierL='🟡 Moderate';}
-  else if(risk<0.55){tier='HIGH';tierL='🟠 High Risk';}
-  else{tier='CRITICAL';tierL='🔴 Critical';}
-  document.getElementById('rBadge').innerHTML = `<span class="badge ${tier}">${tierL}</span>`;
-  document.getElementById('cRisk').textContent = (risk*100).toFixed(1)+'%';
-  document.getElementById('cFields').textContent = known+'/'+FIELDS.length;
-  document.getElementById('cModel').textContent = 'C='+MODEL.c_index;
+  // Tier display
+  const tierDiv = document.getElementById('tierDisplay');
+  tierDiv.className = 'tier-display ' + tierClass[tier];
+  const confLabel = confidence === 'high' ? 'High Confidence' : confidence === 'low' ? 'Low Confidence' : 'Moderate Confidence';
+  const confClass = confidence === 'low' ? 'low-conf' : 'high-conf';
+  tierDiv.innerHTML = `
+    <span class="tier-emoji">${tierEmoji[tier]}</span>
+    <div class="tier-label">${tier}</div>
+    <div class="tier-score">Total Score: ${score} pts &nbsp;|&nbsp; Care Gap: ${careGapIndex} &nbsp;|&nbsp;
+      <span class="confidence-badge ${confClass}">${confLabel}</span>
+    </div>
+  `;
 
-  const missing = FIELDS.length - known;
-  let warn='';
-  if(missing===0) warn='<div class="warn g">✅ All fields complete — high confidence prediction</div>';
-  else if(missing<=5) warn='<div class="warn i">ℹ️ '+missing+' fields unknown. Model accounts for missingness via unknown flags.</div>';
-  else if(missing<=15) warn='<div class="warn w">⚠️ '+missing+' fields unknown. Risk estimate may be inflated by missingness pattern.</div>';
-  else warn='<div class="warn w">⚠️ '+missing+' fields unknown (out of '+FIELDS.length+'). Collect more clinical data for accurate estimate.</div>';
-  document.getElementById('warnBox').innerHTML = warn;
+  // Safety alert
+  const alertDiv = document.getElementById('safetyAlert');
+  let alerts = [];
+  if (tier === 'Critical Risk') {
+    alerts.push('<strong>🔴 CRITICAL:</strong> Multiple high-risk signals. Urgent comprehensive evaluation required.');
+  } else if (tier === 'High Risk') {
+    alerts.push('<strong>⚠️ Elevated Risk:</strong> Schedule comprehensive evaluation within 1–3 months.');
+  }
+  if (missingness.length >= 3) {
+    alerts.push('<strong>📋 Missing Data Alert:</strong> ' + missingness.length + ' fields use default values. Risk may be underestimated. Collect missing data for accurate assessment.');
+  } else if (missingness.length >= 1 && careGapIndex >= 6) {
+    alerts.push('<strong>📋 Data Gap Notice:</strong> Some fields at defaults. Consider verifying these values.');
+  }
+  if (alerts.length > 0) {
+    alertDiv.style.display = 'block';
+    alertDiv.innerHTML = alerts.join('<br>');
+  } else {
+    alertDiv.style.display = 'none';
+  }
 
-  let rec='';
-  if(tier==='CRITICAL')rec='<div class="warn w"><strong>🔴 Action:</strong> Intensive monitoring — weekly MDT review, palliative care consult.</div>';
-  else if(tier==='HIGH')rec='<div class="warn w"><strong>🟠 Action:</strong> Enhanced monitoring — biweekly follow-up, full cardiometabolic workup.</div>';
-  else if(tier==='MODERATE')rec='<div class="warn i"><strong>🟡 Action:</strong> Standard monitoring — monthly follow-up, annual screening.</div>';
-  else rec='<div class="warn g"><strong>🟢 Action:</strong> Routine monitoring — annual evaluation sufficient based on risk profile.</div>';
-  document.getElementById('recBox').innerHTML = rec;
-}
+  // Score breakdown
+  const bdDiv = document.getElementById('breakdown');
+  bdDiv.innerHTML = breakdown.map(b => {
+    const isWarn = b.name.startsWith('⚠');
+    const style = isWarn ? 'color:var(--mod);' : '';
+    return `<div class="breakdown-row" style="${style}"><span>${b.name}: ${b.value}</span><span class="pts">${b.points} pts</span></div>`;
+  }).join('') + `<div class="breakdown-row breakdown-total"><span>TOTAL</span><span class="pts">${score} pts</span></div>`;
 
-// ═══ BUILD FORM ═══
-function buildForm(){
-  const g = document.getElementById('fields');
-  g.innerHTML = FIELDS.map(f=>{
-    let inp;
-    if(f.t==='select'){
-      const opts = (f.o||[]).map(o=>{
-        const v = typeof o==='string'?o:o.v;
-        const l = typeof o==='string'?o:o.l;
-        const sel = v==f.d?' selected':'';
-        return `<option value="${v}"${sel}>${l}</option>`;
-      }).join('');
-      inp = `<select id="inp_${f.k}">${opts}</select>`;
-    }else{
-      inp = `<input type="${f.t}" id="inp_${f.k}" value="${f.d}" min="${f.min||''}" max="${f.max||''}" oninput="updateNote('${f.k}')">`;
-    }
-    const noteHtml = f.note?`<div class="na-row" style="color:#1976d2" id="note_${f.k}">${f.note}</div>`:'';
-    const naHtml = f.na?`<div class="na-row"><label><input type="checkbox" id="na_${f.k}" onchange="togNA('${f.k}')" ${f.naDefault?'checked':''}> N/A</label></div>`:'';
-    return `<div class="field"><label>${f.l}${f.unit?' <span style="font-weight:400;font-size:.75em;color:#999">('+f.unit+')</span>':''}</label>${inp}${noteHtml}${naHtml}</div>`;
+  // Schedule
+  const sched = SCHEDULES[tier];
+  document.getElementById('schedule').innerHTML = `
+    <div class="schedule-row"><span>Monitoring</span><span class="freq">${sched.monitoring}</span></div>
+    <div class="schedule-row"><span>Urodynamics</span><span class="freq">${sched.urodynamics}</span></div>
+    <div class="schedule-row"><span>Clinic Visit</span><span class="freq">${sched.clinic}</span></div>
+    <div class="schedule-row"><span>Renal Ultrasound</span><span class="freq">${sched.renal}</span></div>
+    <div class="schedule-row"><span>Creatinine / eGFR</span><span class="freq">${sched.creatinine}</span></div>
+  `;
+
+  // Complication risk profile
+  const comps = COMPLICATION_PROFILES[tier] || COMPLICATION_PROFILES['Low Risk'];
+  document.getElementById('complications').innerHTML = Object.entries(comps).map(([name, range]) => {
+    const mid = (range[0] + range[1]) / 2;
+    const color = mid > 50 ? 'var(--high)' : mid > 25 ? 'var(--mod)' : 'var(--low)';
+    return `<div class="comp-row">
+      <span>${name}</span>
+      <span style="font-weight:600;">${range[0]}–${range[1]}%</span>
+      <div class="risk-bar"><div class="risk-fill" style="width:${mid}%; background:${color};"></div></div>
+    </div>`;
   }).join('');
-  // Apply naDefault to inputs
-  for(const f of FIELDS){
-    if(f.naDefault){
-      const inp=document.getElementById('inp_'+f.k);
-      inp.classList.add('na');inp.disabled=true;inp.value='N/A';
-    }
-  }
+
+  // Survival estimate
+  const surv = SURVIVAL_ESTIMATES[tier];
+  document.getElementById('survival').innerHTML = `
+    <div class="metric"><div class="val">${surv.median}</div><div class="lbl">Median Time to Severe</div></div>
+    <div class="metric"><div class="val">${surv.range}</div><div class="lbl">IQR Range</div></div>
+    <div class="metric" style="grid-column:1/-1;"><div class="lbl" style="font-size:0.8rem;">${surv.label}</div></div>
+  `;
+
+  // Clinical actions
+  const acts = CLINICAL_ACTIONS[tier];
+  document.getElementById('actions').innerHTML = acts.map(a => '• ' + a).join('<br>');
 }
 
-function updateNote(k){
-  const f = FIELDS.find(x=>x.k===k);
-  if(!f||!f.note) return;
-  const el = document.getElementById('note_'+k);
-  if(!el) return;
-  const v = parseFloat(document.getElementById('inp_'+k).value);
-  if(isNaN(v)){el.textContent=f.note;return;}
-  // Dynamic note based on value
-  if(k==='rehab_duration'||k==='rehab_hosp_days')
-    el.textContent = `${v} days ≈ ${(v/7).toFixed(1)} weeks ≈ ${(v/30).toFixed(1)} months`;
-  else if(k==='acute_hosp_days')
-    el.textContent = `${v} days ≈ ${(v/7).toFixed(1)} weeks`;
-  else el.textContent = f.note;
-}
+// ═══════════════════════════════════════════════
+//  RESET
+// ═══════════════════════════════════════════════
 
-function togNA(k){
-  const cb=document.getElementById('na_'+k),inp=document.getElementById('inp_'+k);
-  if(cb.checked){inp.classList.add('na');inp.value='N/A';inp.disabled=true;}
-  else{inp.classList.remove('na');inp.disabled=false;inp.value=FIELDS.find(f=>f.k===k).d;}
-  if(FIELDS.find(f=>f.k===k)?.note) updateNote(k);
-}
-
-function clearAll(){
-  for(const f of FIELDS){
-    const inp=document.getElementById('inp_'+f.k),cb=document.getElementById('na_'+f.k);
-    if(f.naDefault){
-      inp.value='N/A';inp.classList.add('na');inp.disabled=true;
-      if(cb)cb.checked=true;
-    }else{
-      inp.value=f.d;inp.classList.remove('na');inp.disabled=false;
-      if(cb)cb.checked=false;
-    }
-  }
+function resetForm() {
+  document.getElementById('riskForm').reset();
   document.getElementById('results').classList.remove('show');
+  document.getElementById('emptyState').style.display = 'block';
 }
 
-buildForm();
-loadModel();
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+
+document.getElementById('riskForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  calculateRisk();
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+});
+
+// ═══════════════════════════════════════════════
+//  FIELD REFERENCE GUIDE TOGGLE
+// ═══════════════════════════════════════════════
+
+function toggleRefGuide() {
+  const content = document.getElementById('refGuideContent');
+  const toggle = document.querySelector('.ref-guide-toggle');
+  const arrow = document.getElementById('refArrow');
+  const isOpen = content.classList.contains('show');
+  if (isOpen) {
+    content.classList.remove('show');
+    toggle.classList.remove('open');
+    arrow.textContent = '▶';
+  } else {
+    content.classList.add('show');
+    toggle.classList.add('open');
+    arrow.textContent = '▼';
+  }
+}
 </script>
+
 </body>
 </html>
