@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use SCI-PReSS in your research, please cite it as below."
+title: "SCI-PReSS: Complication Risk Calculator for Spinal Cord Injury"
+authors:
+  - family-names: Jitpimolmard
+    given-names: Jukrapope
+    orcid: "https://orcid.org/0009-0001-9170-426X"
+    email: jukrapope@kku.ac.th
+    affiliation: "KKU National Phenome Institute, Khon Kaen University"
+    affiliation-ror: "https://ror.org/03cq4gr50"
+date-released: "2026-06-14"
+abstract: >
+  Multi-complication screening tool for spinal cord injury based on NSCISC 2021 data
+  (35,675 patients, 134,351 visits). Mean AUC 0.702 (V5) across 16 outcomes.
+keywords:
+  - spinal-cord-injury
+  - risk-calculator
+  - complication-screening
+  - clinical-prediction
+  - NSCISC
+license: MIT
+repository-code: "https://github.com/s3644/sci-mortality-calculator"
+type: software
